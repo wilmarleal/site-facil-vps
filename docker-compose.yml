@@ -4,26 +4,13 @@ services:
     container_name: site_facil_proxy
     restart: always
     command:
-      - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-
-      - "--certificatesresolvers.sslgratis.acme.email=SEU_EMAIL_AQUI"
-      - "--certificatesresolvers.sslgratis.acme.storage=/letsencrypt/acme.json"
-      - "--certificatesresolvers.sslgratis.acme.httpchallenge=true"
-      - "--certificatesresolvers.sslgratis.acme.httpchallenge.entrypoint=web"
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "certificados_ssl:/letsencrypt"
 
   site:
     image: nginx:alpine
@@ -33,10 +20,6 @@ services:
       - "./site:/usr/share/nginx/html:ro"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sitefacil.rule=Host(`SEU_DOMINIO_AQUI.com`)"
-      - "traefik.http.routers.sitefacil.entrypoints=websecure"
-      - "traefik.http.routers.sitefacil.tls.certresolver=sslgratis"
+      - "traefik.http.routers.sitefacil.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.sitefacil.entrypoints=web"
       - "traefik.http.services.sitefacil.loadbalancer.server.port=80"
-
-volumes:
-  certificados_ssl:
