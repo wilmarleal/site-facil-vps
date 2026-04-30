@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Site Fácil VPS | Prof. Wilmar Leal</title>
+  <meta name="description" content="Projeto base para hospedar site em VPS com Docker, Traefik e HTTPS automático." />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Fundo com gradiente animado */
+    body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(-45deg, #0f172a, #1e293b, #334155, #0f2027);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      width: 100%;
+      max-width: 980px;
+      /* Animação de entrada do painel inteiro */
+      animation: slideUpFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    @keyframes slideUpFade {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      padding: 42px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Brilho sutil no topo do card */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.5), transparent);
+      animation: scanline 3s linear infinite;
+    }
+
+    @keyframes scanline {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Badge com animação de pulso */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.1);
+      color: #4ade80;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    h1 {
+      font-size: clamp(34px, 6vw, 64px);
+      line-height: 1.1;
+      margin-bottom: 18px;
+      letter-spacing: -1.5px;
+      background: linear-gradient(to right, #f8fafc, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      max-width: 760px;
+      margin-bottom: 34px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 34px;
+    }
+
+    /* Cards de Informação com hover interativo */
+    .info {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 18px;
+      padding: 24px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .info:hover {
+      transform: translateY(-5px);
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(34, 197, 94, 0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .info span {
+      display: block;
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .info strong {
+      font-size: 20px;
+      color: #f8fafc;
+      word-break: break-word;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+    /* Botões aprimorados */
+    .btn {
+      text-decoration: none;
+      color: #0f172a;
+      background: #f8fafc;
+      padding: 14px 24px;
+      border-radius: 14px;
+      font-weight: 800;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15);
+      background: #ffffff;
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: #f8fafc;
+      border: 1px solid rgba(248, 250, 252, 0.2);
+      backdrop-filter: blur(5px);
+    }
+
+    .btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(248, 250, 252, 0.5);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .footer {
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+      padding-top: 22px;
+      color: #94a3b8;
+      font-size: 15px;
+      line-height: 1.7;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .footer p {
+      transition: color 0.2s ease;
+    }
+
+    .footer p:hover {
+      color: #f8fafc;
+    }
+
+    .footer strong {
+      color: #e2e8f0;
+    }
+
+    @media (max-width: 760px) {
+      .card {
+        padding: 28px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        text-align: center;
+        width: 100%;
+      }
+      
+      .footer {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <section class="card">
+      <div class="badge">
+        <span style="font-size: 10px;">🟢</span> Publicação ativa
+      </div>
+
+      <h1>Site Fácil VPS</h1>
+
+      <p class="subtitle">
+        Seu site foi publicado com sucesso em uma VPS, usando Docker,
+        proxy automático e certificado HTTPS gratuito.
+      </p>
+
+      <div class="grid">
+        <div class="info">
+          <span>Status</span>
+          <strong>Online</strong>
+        </div>
+
+        <div class="info">
+          <span>Segurança</span>
+          <strong>HTTPS ativo</strong>
+        </div>
+
+        <div class="info">
+          <span>Servidor</span>
+          <strong>VPS + Docker</strong>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="btn" href="https://wilmarleal.com" target="_blank">Acessar Wilmar Leal</a>
+        <a class="btn secondary" href="https://www.youtube.com/@profwilmarleal" target="_blank">YouTube @profwilmarleal</a>
+        <a class="btn secondary" href="https://luminvs.com" target="_blank">Luminvs Tecnologia</a>
+      </div>
+
+      <div class="footer">
+        <p><strong>Projeto:</strong> Site Fácil VPS</p>
+        <p><strong>Autor:</strong> Prof. Wilmar Leal | Wilmar Borges Leal Junior</p>
+        <p><strong>Instagram:</strong> @luminvstecnologia</p>
+        <p><strong>YouTube:</strong> @profwilmarleal</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Script mantido e aprimorado com leve delay para as animações de texto
+    setTimeout(() => {
+      document.querySelectorAll('.info')[0].querySelector('strong').textContent = 'Online';
+      document.querySelectorAll('.info')[1].querySelector('strong').textContent =
+        location.protocol === 'https:' ? 'HTTPS ativo' : 'HTTP sem SSL';
+    }, 500);
+  </script>
+</body>
+</html>
